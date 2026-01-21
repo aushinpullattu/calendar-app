@@ -48,10 +48,12 @@ if EVENTS_FILE.exists():
 else:
     events = []
 
+# Convert events to calendar format
 calendar_events = [
     {
         "title": e["title"],
         "start": e["start"],
+        "end": e.get("end", e["start"]),  # use start if no end
         "extendedProps": {
             "image": e.get("image"),
             "instagram": e.get("instagram"),
@@ -60,7 +62,7 @@ calendar_events = [
     for e in events
 ]
 
-# ------------------ UI ------------------
+# ------------------ CALENDAR UI ------------------
 st.title("📅 Community Calendar")
 
 clicked = calendar(
@@ -78,6 +80,8 @@ if clicked and "event" in clicked:
     props = event.get("extendedProps", {})
 
     st.subheader(event["title"])
+    st.markdown(f"**Start Date:** {event['start']}")
+    st.markdown(f"**End Date:** {event.get('end', event['start'])}")
 
     if props.get("image"):
         st.image(props["image"], use_column_width=True)
@@ -91,7 +95,8 @@ st.sidebar.subheader("➕ Add Event")
 
 with st.sidebar.form("add_event"):
     title = st.text_input("Event title")
-    date = st.date_input("Event date")
+    start_date = st.date_input("Start date")
+    end_date = st.date_input("End date")
     instagram = st.text_input("Instagram link (optional)")
     image = st.file_uploader("Upload image", type=["jpg", "png"])
 
@@ -100,6 +105,8 @@ with st.sidebar.form("add_event"):
     if submitted:
         if not title:
             st.sidebar.error("Title is required")
+        elif end_date < start_date:
+            st.sidebar.error("End date cannot be before start date")
         else:
             image_path = None
             if image:
@@ -109,7 +116,8 @@ with st.sidebar.form("add_event"):
 
             events.append({
                 "title": title,
-                "start": str(date),
+                "start": str(start_date),
+                "end": str(end_date),
                 "image": str(image_path) if image_path else None,
                 "instagram": instagram,
             })
@@ -117,4 +125,4 @@ with st.sidebar.form("add_event"):
             with open(EVENTS_FILE, "w") as f:
                 json.dump(events, f, indent=2)
 
-            st.sidebar.success("✅ Event added — refresh if needed")
+            st.sidebar.success("✅ Event added — refresh page to see it")
