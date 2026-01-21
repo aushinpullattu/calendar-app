@@ -1,0 +1,15 @@
+credentials:
+  usernames:
+    aushin:
+      email: aushin@email.com
+      name: Aushin
+      password: "$2b$12$C6UzMDM.H6dfI/f/IKcEeOe6k9C2cJXG8F9F7Wl5aQZ0BqX2X9M1e"
+    guest:
+      email: guest@email.com
+      name: Guest
+      password: "$2b$12$C6UzMDM.H6dfI/f/IKcEeOe6k9C2cJXG8F9F7Wl5aQZ0BqX2X9M1e"
+
+cookie:
+  expiry_days: 30
+  key: calendar_app
+  name: calendar_cookie
