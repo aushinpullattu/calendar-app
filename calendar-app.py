@@ -16,7 +16,7 @@ if "logged_in" not in st.session_state:
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# Hardcoded users
+# Hardcoded users (add more as needed)
 USERS = {
     "admin": "admin123",
     "aushin": "password123"
@@ -135,8 +135,8 @@ with st.sidebar.form("add_event"):
 
             events.append(new_event)
 
+            # Save events permanently
             with open(EVENTS_FILE, "w") as f:
                 json.dump(events, f, indent=2)
 
             st.sidebar.success("✅ Event added — it will appear in the calendar immediately")
-            st.experimental_rerun()
