@@ -1,5 +1,5 @@
-streamlit
+streamlit==1.31.1
 streamlit-calendar
-streamlit-authenticator
+streamlit-authenticator==0.3.2
 pillow
 pyyaml
