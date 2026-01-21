@@ -1,12 +1,8 @@
 credentials:
   usernames:
-    aushin:
-      email: aushin@email.com
-      name: Aushin
-      password: "$2b$12$C6UzMDM.H6dfI/f/IKcEeOe6k9C2cJXG8F9F7Wl5aQZ0BqX2X9M1e"
-    guest:
-      email: guest@email.com
-      name: Guest
+    admin:
+      email: admin@email.com
+      name: Admin
       password: "$2b$12$C6UzMDM.H6dfI/f/IKcEeOe6k9C2cJXG8F9F7Wl5aQZ0BqX2X9M1e"
 
 cookie:
