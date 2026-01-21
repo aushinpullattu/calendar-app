@@ -2,9 +2,6 @@ import streamlit as st
 import json
 from pathlib import Path
 from streamlit_calendar import calendar
-import streamlit_authenticator as stauth
-import yaml
-from yaml.loader import SafeLoader
 
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(
@@ -12,34 +9,32 @@ st.set_page_config(
     layout="wide"
 )
 
-# ------------------ LOAD USERS ------------------
-with open("users.yaml") as file:
-    config = yaml.load(file, Loader=SafeLoader)
+# ------------------ SIMPLE LOGIN ------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-authenticator = stauth.Authenticate(
-    config["credentials"],
-    config["cookie"]["name"],
-    config["cookie"]["key"],
-    config["cookie"]["expiry_days"],
-)
+def login():
+    st.title("🔐 Login")
 
-# ------------------ LOGIN (SIDEBAR ONLY) ------------------
-name, authentication_status, username = authenticator.login(
-    location="sidebar"
-)
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
 
-# ---- HANDLE AUTH STATES EXPLICITLY ----
-if authentication_status is None:
-    st.info("👈 Please log in using the sidebar")
+    if st.button("Login"):
+        if username == "admin" and password == "admin123":
+            st.session_state.logged_in = True
+            st.rerun()
+        else:
+            st.error("❌ Incorrect username or password")
+
+if not st.session_state.logged_in:
+    login()
     st.stop()
 
-if authentication_status is False:
-    st.error("❌ Incorrect username or password")
-    st.stop()
-
-# ---- AUTH SUCCESS ----
-st.success(f"✅ Logged in as {name}")
-authenticator.logout("Logout", "sidebar")
+# ------------------ LOGOUT ------------------
+st.sidebar.success("✅ Logged in as admin")
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.rerun()
 
 # ------------------ PATHS ------------------
 EVENTS_FILE = Path("events.json")
@@ -88,10 +83,7 @@ if clicked and "event" in clicked:
         st.image(props["image"], use_column_width=True)
 
     if props.get("instagram"):
-        st.markdown(
-            f"📸 [Open Instagram Post]({props['instagram']})",
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"📸 [Instagram link]({props['instagram']})")
 
 # ------------------ ADD EVENT ------------------
 st.sidebar.markdown("---")
@@ -115,16 +107,14 @@ with st.sidebar.form("add_event"):
                 with open(image_path, "wb") as f:
                     f.write(image.getbuffer())
 
-            events.append(
-                {
-                    "title": title,
-                    "start": str(date),
-                    "image": str(image_path) if image_path else None,
-                    "instagram": instagram,
-                }
-            )
+            events.append({
+                "title": title,
+                "start": str(date),
+                "image": str(image_path) if image_path else None,
+                "instagram": instagram,
+            })
 
             with open(EVENTS_FILE, "w") as f:
                 json.dump(events, f, indent=2)
 
-            st.sidebar.success("✅ Event added — refresh to see it")
+            st.sidebar.success("✅ Event added — refresh if needed")
