@@ -5,10 +5,15 @@ import streamlit_authenticator as stauth
 import yaml
 from PIL import Image
 from yaml.loader import SafeLoader
+from pathlib import Path
 
-st.set_page_config(page_title="Shared Calendar", layout="wide")
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(
+    page_title="Shared Calendar",
+    layout="wide"
+)
 
-# ---------- AUTH ----------
+# ------------------ LOAD AUTH CONFIG ------------------
 with open("users.yaml") as file:
     config = yaml.load(file, Loader=SafeLoader)
 
@@ -19,84 +24,103 @@ authenticator = stauth.Authenticate(
     config["cookie"]["expiry_days"],
 )
 
-name, authentication_status, username = authenticator.login("Login", "main")
+# ------------------ LOGIN (SIDEBAR) ------------------
+name, authentication_status, username = authenticator.login(
+    location="sidebar"
+)
 
-if not authentication_status:
+if authentication_status is False:
+    st.error("❌ Username/password is incorrect")
+    st.stop()
+
+if authentication_status is None:
+    st.warning("🔐 Please enter your username and password")
     st.stop()
 
 authenticator.logout("Logout", "sidebar")
 st.sidebar.success(f"Welcome {name}")
 
-# ---------- LOAD EVENTS ----------
-with open("events.json", "r") as f:
-    events = json.load(f)
+# ------------------ FILE PATHS ------------------
+EVENTS_FILE = Path("events.json")
+IMAGES_DIR = Path("images")
+IMAGES_DIR.mkdir(exist_ok=True)
 
+# ------------------ LOAD EVENTS ------------------
+if EVENTS_FILE.exists():
+    with open(EVENTS_FILE, "r") as f:
+        events = json.load(f)
+else:
+    events = []
+
+# Convert to calendar format
 calendar_events = [
     {
         "title": e["title"],
         "start": e["start"],
         "extendedProps": {
-            "image": e["image"],
-            "instagram": e["instagram"]
+            "image": e.get("image"),
+            "instagram": e.get("instagram")
         }
     }
     for e in events
 ]
 
-# ---------- CALENDAR ----------
-st.header("📅 Community Calendar")
-
-calendar_options = {
-    "initialView": "dayGridMonth",
-    "eventClick": True
-}
+# ------------------ MAIN UI ------------------
+st.title("📅 Community Calendar")
 
 clicked = calendar(
     events=calendar_events,
-    options=calendar_options,
+    options={
+        "initialView": "dayGridMonth",
+        "height": 650
+    },
     key="calendar",
 )
 
-# ---------- EVENT DETAILS ----------
+# ------------------ EVENT DETAILS ------------------
 if clicked and "event" in clicked:
     event = clicked["event"]
-    props = event["extendedProps"]
+    props = event.get("extendedProps", {})
 
     st.subheader(event["title"])
 
     if props.get("image"):
-        img = Image.open(props["image"])
-        st.image(img, use_column_width=True)
+        st.image(props["image"], use_column_width=True)
 
     if props.get("instagram"):
-        st.markdown(f"📸 [View on Instagram]({props['instagram']})")
+        st.markdown(
+            f"📸 [View Instagram Post]({props['instagram']})",
+            unsafe_allow_html=True
+        )
 
-# ---------- ADD EVENT (ADMIN / ALL USERS) ----------
-st.sidebar.subheader("➕ Add Event")
+# ------------------ ADD EVENT FORM ------------------
+st.sidebar.markdown("---")
+st.sidebar.subheader("➕ Add New Event")
 
 with st.sidebar.form("add_event"):
-    title = st.text_input("Title")
-    date = st.date_input("Date")
-    instagram = st.text_input("Instagram Link")
-    image = st.file_uploader("Image", type=["jpg", "png"])
+    title = st.text_input("Event title")
+    date = st.date_input("Event date")
+    instagram = st.text_input("Instagram link (optional)")
+    image = st.file_uploader("Upload image", type=["jpg", "png"])
 
-    submitted = st.form_submit_button("Add")
+    submitted = st.form_submit_button("Add Event")
 
-    if submitted:
-        img_path = None
+    if submitted and title:
+        image_path = None
+
         if image:
-            img_path = f"images/{image.name}"
-            with open(img_path, "wb") as f:
+            image_path = IMAGES_DIR / image.name
+            with open(image_path, "wb") as f:
                 f.write(image.getbuffer())
 
         events.append({
             "title": title,
             "start": str(date),
-            "image": img_path,
+            "image": str(image_path) if image_path else None,
             "instagram": instagram
         })
 
-        with open("events.json", "w") as f:
+        with open(EVENTS_FILE, "w") as f:
             json.dump(events, f, indent=2)
 
-        st.success("Event added! Refresh the page.")
+        st.sidebar.success("✅ Event added! Refresh the page.")
