@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ------------------ SIMPLE MULTI-USER LOGIN ------------------
+# ------------------ MULTI-USER LOGIN ------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user" not in st.session_state:
@@ -19,22 +19,23 @@ if "user" not in st.session_state:
 # Hardcoded users
 USERS = {
     "admin": "admin123",
-    "aushin": "password123"  # example second user
+    "aushin": "password123"
 }
 
 def login():
     st.title("🔐 Login")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
-    if st.button("Login"):
+    login_pressed = st.button("Login")
+    if login_pressed:
         if username in USERS and USERS[username] == password:
             st.session_state.logged_in = True
             st.session_state.user = username
             st.success(f"✅ Logged in as {username}")
-            st.experimental_rerun()
         else:
             st.error("❌ Incorrect username or password")
 
+# Show login if not logged in
 if not st.session_state.logged_in:
     login()
     st.stop()
@@ -46,7 +47,7 @@ if st.sidebar.button("Logout"):
     st.session_state.user = None
     st.experimental_rerun()
 
-# ------------------ PATHS ------------------
+# ------------------ FILE PATHS ------------------
 EVENTS_FILE = Path("events.json")
 IMAGES_DIR = Path("images")
 IMAGES_DIR.mkdir(exist_ok=True)
@@ -80,25 +81,23 @@ clicked = calendar(
     options={
         "initialView": "dayGridMonth",
         "height": 650,
-        "eventClick": "function(info){return info.event.id}"  # just to enable click detection
+        "eventClick": "function(info){return info.event.id}"  # enable click detection
     },
     key="calendar"
 )
 
 # ------------------ SHOW EVENT DETAILS ------------------
 if clicked and "event" in clicked:
-    # Find the event in our events list
-    title = clicked["event"]["title"]
-    matching_events = [e for e in events if e["title"] == title]
+    # Match clicked event by title
+    clicked_title = clicked["event"]["title"]
+    matching_events = [e for e in events if e["title"] == clicked_title]
     if matching_events:
         event = matching_events[0]  # pick first match
         st.subheader(event["title"])
         st.markdown(f"**Start Date:** {event['start']}")
         st.markdown(f"**End Date:** {event.get('end', event['start'])}")
-
         if event.get("image"):
             st.image(event["image"], use_column_width=True)
-
         if event.get("instagram"):
             st.markdown(f"📸 [Instagram link]({event['instagram']})")
 
