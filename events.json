@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Beach Day",
+    "start": "2026-01-20",
+    "image": "images/event1.jpg",
+    "instagram": "https://www.instagram.com/p/ABC123/"
+  },
+  {
+    "title": "Coffee Meetup",
+    "start": "2026-01-22",
+    "image": "images/event2.jpg",
+    "instagram": "https://www.instagram.com/p/XYZ456/"
+  }
+]
